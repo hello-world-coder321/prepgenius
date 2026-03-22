@@ -89,6 +89,7 @@ async function boot() {
   app.use('/study', require('./routes/study'));
   app.use('/planner', require('./routes/planner'));
   app.use('/youtube', require('./routes/youtube'));
+  app.use('/srs', require('./routes/srs'));
 
   app.get('/', (req, res) => {
     if (req.session.user) return res.redirect('/dashboard');

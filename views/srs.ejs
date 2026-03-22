@@ -1,0 +1,1357 @@
+<%- include('partials/header') %>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07080f;
+  --bg2:#0e0f1a;
+  --bg3:#141526;
+  --surface:#1a1b2e;
+  --surface2:#22243a;
+  --border:#2a2d4a;
+  --border2:#353860;
+  --text:#e8eaf6;
+  --text2:#9196c4;
+  --text3:#5a5f8a;
+  --accent:#6c63ff;
+  --accent2:#ff6584;
+  --gold:#ffd166;
+  --teal:#06d6a0;
+  --red:#ff4757;
+  --orange:#ff9f43;
+  --green:#06d6a0;
+  --blue:#4ecdc4;
+  --font:'Space Grotesk',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow-x:hidden}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.topbar{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  height:52px;display:flex;align-items:center;
+  padding:0 20px;gap:12px;
+  position:sticky;top:0;z-index:200;
+}
+.logo{font-size:17px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.logo em{color:var(--accent);font-style:normal}
+.topbar-tabs{display:flex;gap:2px;margin-left:20px}
+.ttab{
+  padding:6px 14px;font-size:12px;font-weight:500;
+  border-radius:6px;cursor:pointer;color:var(--text2);
+  transition:all .15s;border:none;background:transparent;
+}
+.ttab:hover{background:var(--surface);color:var(--text)}
+.ttab.active{background:var(--accent);color:white}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.badge{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;background:var(--surface2);color:var(--text2)}
+.badge.warn{background:rgba(255,71,87,0.15);color:var(--red)}
+.badge.good{background:rgba(6,214,160,0.15);color:var(--teal)}
+
+.app{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 52px);overflow:hidden}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.main-panel{overflow-y:auto;padding:20px}
+
+.panel-head{
+  padding:14px 16px 10px;
+  font-size:11px;font-weight:600;letter-spacing:1px;
+  color:var(--text3);text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.panel-head span{color:var(--accent);margin-left:6px;text-transform:none;letter-spacing:0;font-weight:500;font-size:10px}
+
+.topic-item{
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
+  display:flex;align-items:center;gap:10px;
+}
+.topic-item:hover{background:var(--surface)}
+.topic-item.selected{background:var(--surface);border-left:2px solid var(--accent)}
+.topic-retention{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+  font-family:var(--mono);
+  border:2px solid;
+}
+.topic-info{flex:1;min-width:0}
+.topic-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topic-meta{font-size:10px;color:var(--text3);margin-top:1px}
+.topic-urgency{
+  font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;flex-shrink:0;
+  font-family:var(--mono);
+}
+.urg-critical{background:rgba(255,71,87,.2);color:var(--red)}
+.urg-soon{background:rgba(255,159,67,.2);color:var(--orange)}
+.urg-ok{background:rgba(6,214,160,.15);color:var(--teal)}
+.urg-strong{background:rgba(108,99,255,.15);color:var(--accent)}
+
+.add-form{padding:12px 16px;border-top:1px solid var(--border);background:var(--bg)}
+.add-form-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.form-row{display:flex;gap:6px;margin-bottom:6px}
+.inp{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font);font-size:12px;
+  padding:7px 10px;border-radius:6px;outline:none;
+  transition:border .15s;
+}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+select.inp{cursor:pointer}
+.btn{
+  padding:7px 12px;border-radius:6px;border:none;
+  font-family:var(--font);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:#7c75ff}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{background:var(--surface2);color:var(--text)}
+
+.section{margin-bottom:24px}
+.section-title{
+  font-size:14px;font-weight:700;color:var(--text);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.section-title .dot{width:8px;height:8px;border-radius:50%}
+
+#fcCanvas{
+  width:100%;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);
+  display:block;
+}
+
+.curve-controls{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;
+}
+.filter-chip{
+  padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--text2);
+  transition:all .15s;
+}
+.filter-chip.active{background:var(--accent);color:white;border-color:var(--accent)}
+.filter-chip:hover{border-color:var(--accent2)}
+
+.review-queue{display:flex;flex-direction:column;gap:8px}
+.review-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all .15s;
+  position:relative;overflow:hidden;
+}
+.review-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+}
+.review-card:hover{border-color:var(--border2);transform:translateX(2px)}
+.rc-critical::before{background:var(--red)}
+.rc-soon::before{background:var(--orange)}
+.rc-ok::before{background:var(--teal)}
+.rc-strong::before{background:var(--accent)}
+.review-card-ret{
+  font-family:var(--mono);font-size:20px;font-weight:700;
+  min-width:48px;text-align:center;
+}
+.review-card-info{flex:1}
+.review-card-name{font-size:13px;font-weight:600}
+.review-card-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.review-card-next{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.review-actions{display:flex;gap:4px}
+.recall-btn{
+  width:28px;height:28px;border-radius:6px;border:none;
+  cursor:pointer;font-size:11px;font-weight:700;
+  transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.recall-btn:hover{transform:scale(1.1)}
+
+#kgCanvas{
+  width:100%;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border);
+  cursor:grab;display:block;
+}
+#kgCanvas:active{cursor:grabbing}
+.kg-controls{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.kg-legend{
+  display:flex;gap:12px;flex-wrap:wrap;
+  padding:10px 14px;background:var(--surface);
+  border-radius:8px;border:1px solid var(--border);
+  margin-bottom:10px;
+}
+.kg-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2)}
+.kg-dot{width:8px;height:8px;border-radius:50%}
+
+.tooltip{
+  position:fixed;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 14px;font-size:12px;
+  pointer-events:none;z-index:999;min-width:180px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  display:none;
+}
+.tooltip-title{font-weight:700;margin-bottom:4px;color:var(--text)}
+.tooltip-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--text2);margin-bottom:2px}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:12px;
+}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+.topic-detail{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:16px;margin-bottom:16px;
+  animation:fadeIn .2s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.sep{border:none;border-top:1px solid var(--border);margin:0}
+
+#miniGraph{width:100%;height:120px;display:block;background:transparent}
+
+.rate-btn{
+  width:32px;height:32px;border-radius:6px;border:none;
+  font-size:11px;font-weight:700;cursor:pointer;
+  transition:all .15s;font-family:var(--mono);
+}
+.rate-btn:hover{transform:scale(1.08)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s infinite}
+
+.search-wrap{padding:10px 16px;border-bottom:1px solid var(--border)}
+.search-inp{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font);font-size:12px;
+  padding:6px 10px;border-radius:6px;outline:none;
+  transition:border .15s;
+}
+.search-inp:focus{border-color:var(--accent)}
+.search-inp::placeholder{color:var(--text3)}
+
+/* Loading state */
+.loading-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:200px;gap:12px;color:var(--text3);
+}
+.loading-spinner{
+  width:32px;height:32px;border:2px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Prep<em>IQ</em></div>
+  <div class="topbar-tabs">
+    <button class="ttab active" onclick="showTab('fc')">Forgetting Curve</button>
+    <button class="ttab" onclick="showTab('kg')">Knowledge Graph</button>
+    <button class="ttab" onclick="showTab('queue')">Review Queue</button>
+  </div>
+  <div class="topbar-right">
+    <span class="badge warn" id="dueCount">— due today</span>
+    <span class="badge good" id="streakBadge"><%= user.username %></span>
+    <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">
+      <%= user.username.charAt(0).toUpperCase() %>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="panel-head">Topics <span id="topicCount">Loading…</span></div>
+
+    <div class="search-wrap">
+      <input class="search-inp" id="searchInp" placeholder="Search topics..." oninput="filterTopics(this.value)">
+    </div>
+
+    <div id="topicList" style="flex:1;overflow-y:auto">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Loading topics…</span>
+      </div>
+    </div>
+
+    <hr class="sep">
+    <div class="panel-head">Knowledge Map</div>
+    <canvas id="miniGraph"></canvas>
+
+    <hr class="sep">
+    <div class="add-form">
+      <div class="add-form-title">Add Topic</div>
+      <div class="form-row">
+        <input class="inp" id="newTopicName" placeholder="Topic name (e.g. Gauss's Law)">
+      </div>
+      <div class="form-row">
+        <select class="inp" id="newTopicSubject">
+          <option value="Physics">Physics</option>
+          <option value="Math">Mathematics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Biology">Biology</option>
+        </select>
+        <select class="inp" id="newTopicChapter">
+          <option value="Electrostatics">Electrostatics</option>
+          <option value="Mechanics">Mechanics</option>
+          <option value="Optics">Optics</option>
+          <option value="Calculus">Calculus</option>
+          <option value="Algebra">Algebra</option>
+          <option value="Organic">Organic Chem</option>
+          <option value="Inorganic">Inorganic Chem</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <input class="inp" id="newTopicPrereq" placeholder="Prerequisites (comma-separated names)">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="addTopic()">+ Add to Knowledge Graph</button>
+    </div>
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div class="main-panel" id="mainContent">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <span>Loading your study data…</span>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="tt-title"></div>
+  <div class="tooltip-row"><span>Retention</span><span id="tt-ret"></span></div>
+  <div class="tooltip-row"><span>Next review</span><span id="tt-next"></span></div>
+  <div class="tooltip-row"><span>Interval</span><span id="tt-int"></span></div>
+  <div class="tooltip-row"><span>Study count</span><span id="tt-rep"></span></div>
+</div>
+
+<script>
+// ============================================================
+//  SM-2 ALGORITHM — client-side copy for UI calculations only
+//  The authoritative calculation happens server-side in services/sm2.js
+// ============================================================
+function retention(topic, atTime) {
+  const t = atTime === undefined ? Date.now() : atTime;
+  const lastStudied = new Date(topic.lastStudied).getTime();
+  const daysSince = (t - lastStudied) / 86400000;
+  const S = Math.max(0.5, topic.interval * 0.7);
+  return Math.max(0.02, Math.exp(-daysSince / S));
+}
+
+function retentionPercent(topic, atTime) {
+  return Math.round(retention(topic, atTime) * 100);
+}
+
+function daysUntilDue(topic) {
+  const nextDue = new Date(topic.nextDue).getTime();
+  return Math.max(0, Math.round((nextDue - Date.now()) / 86400000));
+}
+
+function urgency(topic) {
+  // Use server-provided urgency if available, otherwise calculate
+  if (topic.urgency) return topic.urgency;
+  const ret = retentionPercent(topic);
+  const overdue = Date.now() > new Date(topic.nextDue).getTime();
+  if (overdue && ret < 40) return 'critical';
+  if (overdue || ret < 55) return 'soon';
+  if (ret < 75) return 'ok';
+  return 'strong';
+}
+
+function urgencyColor(u) {
+  return {critical:'#ff4757',soon:'#ff9f43',ok:'#06d6a0',strong:'#6c63ff'}[u];
+}
+
+// ============================================================
+//  STATE — loaded from API, not hardcoded
+// ============================================================
+let topics = [];
+let topicMap = {};
+let selectedTopic = null;
+let activeTab = 'fc';
+let searchQuery = '';
+
+// ============================================================
+//  SIDEBAR: TOPIC LIST
+// ============================================================
+function getRetentionStyle(ret) {
+  if (ret >= 75) return {color:'#6c63ff',border:'#6c63ff'};
+  if (ret >= 55) return {color:'#06d6a0',border:'#06d6a0'};
+  if (ret >= 35) return {color:'#ff9f43',border:'#ff9f43'};
+  return {color:'#ff4757',border:'#ff4757'};
+}
+
+function renderTopicList() {
+  const container = document.getElementById('topicList');
+  const q = searchQuery.toLowerCase();
+  const filtered = topics.filter(t =>
+    !q || t.name.toLowerCase().includes(q) || t.subject.toLowerCase().includes(q)
+  );
+
+  const order = {critical:0,soon:1,ok:2,strong:3};
+  filtered.sort((a,b) => {
+    const ua = urgency(a), ub = urgency(b);
+    if (order[ua] !== order[ub]) return order[ua] - order[ub];
+    return retentionPercent(a) - retentionPercent(b);
+  });
+
+  document.getElementById('topicCount').textContent = `${filtered.length} topics`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text3);font-size:12px">
+      No topics yet.<br>Add your first topic below.
+    </div>`;
+    document.getElementById('dueCount').textContent = `0 due today`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => {
+    const ret = retentionPercent(t);
+    const style = getRetentionStyle(ret);
+    const urg = urgency(t);
+    const urgLabels = {critical:'CRITICAL',soon:'DUE SOON',ok:'REVIEW',strong:'STRONG'};
+    const isSelected = selectedTopic && selectedTopic.id === t.id;
+    return `<div class="topic-item${isSelected?' selected':''}" onclick="selectTopic('${t.id}')">
+      <div class="topic-retention" style="color:${style.color};border-color:${style.border}30;background:${style.border}10">
+        ${ret}%
+      </div>
+      <div class="topic-info">
+        <div class="topic-name" title="${t.name}">${t.name}</div>
+        <div class="topic-meta">${t.subject} · ${t.chapter} · ${t.repetitions} reviews</div>
+      </div>
+      <span class="topic-urgency urg-${urg}">${urgLabels[urg]}</span>
+    </div>`;
+  }).join('');
+
+  const due = topics.filter(t => Date.now() >= new Date(t.nextDue).getTime() || retentionPercent(t) < 50).length;
+  document.getElementById('dueCount').textContent = `${due} due today`;
+}
+
+function filterTopics(q) {
+  searchQuery = q;
+  renderTopicList();
+}
+
+function selectTopic(id) {
+  selectedTopic = topicMap[id];
+  renderTopicList();
+  renderMain();
+}
+
+// ============================================================
+//  TAB SWITCH
+// ============================================================
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.ttab').forEach((el,i) => {
+    el.classList.toggle('active', ['fc','kg','queue'][i] === tab);
+  });
+  renderMain();
+}
+
+function renderMain() {
+  const el = document.getElementById('mainContent');
+  if (activeTab === 'fc') renderFCTab(el);
+  else if (activeTab === 'kg') renderKGTab(el);
+  else renderQueueTab(el);
+}
+
+// ============================================================
+//  FORGETTING CURVE TAB
+// ============================================================
+function renderFCTab(el) {
+  const due = topics.filter(t => Date.now() >= new Date(t.nextDue).getTime() || retentionPercent(t) < 50).length;
+  const avgRet = topics.length ? Math.round(topics.reduce((s,t) => s + retentionPercent(t), 0) / topics.length) : 0;
+  const strong = topics.filter(t => urgency(t) === 'strong').length;
+  const topicDetailHTML = selectedTopic ? renderTopicDetail(selectedTopic) : '';
+
+  el.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--red)">${due}</div>
+        <div class="stat-label">Due for Review</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--gold)">${avgRet}%</div>
+        <div class="stat-label">Avg Retention</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--teal)">${strong}</div>
+        <div class="stat-label">Strong Topics</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent)">${topics.length}</div>
+        <div class="stat-label">Total Topics</div>
+      </div>
+    </div>
+    ${topicDetailHTML}
+    <div class="section">
+      <div class="section-title">
+        <div class="dot" style="background:var(--accent)"></div>
+        Forgetting Curves — All Topics
+      </div>
+      <div class="curve-controls">
+        <span style="font-size:11px;color:var(--text3)">Filter:</span>
+        <div class="filter-chip active" onclick="filterCurve(this,'all')">All</div>
+        <div class="filter-chip" onclick="filterCurve(this,'critical')">Critical</div>
+        <div class="filter-chip" onclick="filterCurve(this,'Physics')">Physics</div>
+        <div class="filter-chip" onclick="filterCurve(this,'Math')">Math</div>
+        <div class="filter-chip" onclick="filterCurve(this,'Chemistry')">Chemistry</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">Click curve to select topic</div>
+      </div>
+      <canvas id="fcCanvas" height="320"></canvas>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;padding:10px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">
+          <div style="width:20px;height:2px;background:var(--red)"></div> Critical (&lt;40%)
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">
+          <div style="width:20px;height:2px;background:var(--orange)"></div> Due soon (40–55%)
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">
+          <div style="width:20px;height:2px;background:var(--teal)"></div> OK (55–75%)
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">
+          <div style="width:20px;height:2px;background:var(--accent)"></div> Strong (&gt;75%)
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">
+          <div style="width:16px;height:1px;background:var(--border2);border-top:1px dashed var(--border2)"></div> Review threshold (50%)
+        </div>
+      </div>
+    </div>
+  `;
+  setTimeout(() => { drawForgettingCurves('all'); attachFCHover(); }, 50);
+}
+
+function renderTopicDetail(t) {
+  const ret = retentionPercent(t);
+  const urg = urgency(t);
+  const style = getRetentionStyle(ret);
+  const nextDays = daysUntilDue(t);
+  const retHistory = Array.from({length:20}, (_,i) => {
+    const daysBack = 20 - i;
+    const timepoint = Date.now() - daysBack * 86400000;
+    return retentionPercent(t, timepoint);
+  });
+
+  // Resolve prerequisite names — prerequisites may be objects (populated) or id strings
+  const prereqHTML = t.prerequisites && t.prerequisites.length > 0 ? `
+    <div style="margin-top:10px;font-size:11px;color:var(--text3)">
+      Prerequisites: ${t.prerequisites.map(p => {
+        const pid = typeof p === 'object' ? (p._id || p.id) : p;
+        const pre = topicMap[pid];
+        if (!pre) return '';
+        const preRet = retentionPercent(pre);
+        const preStyle = getRetentionStyle(preRet);
+        return `<span style="display:inline-block;margin:2px 3px;padding:2px 8px;border-radius:4px;background:${preStyle.color}15;color:${preStyle.color};font-size:10px;font-weight:500;cursor:pointer" onclick="selectTopic('${pid}')">${pre.name} (${preRet}%)</span>`;
+      }).join('')}
+    </div>` : '';
+
+  return `<div class="topic-detail">
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px">
+      <div style="width:56px;height:56px;border-radius:50%;border:3px solid ${style.color};
+        display:flex;align-items:center;justify-content:center;
+        font-family:var(--mono);font-size:18px;font-weight:700;color:${style.color};
+        background:${style.color}15;flex-shrink:0">
+        ${ret}%
+      </div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;margin-bottom:2px">${t.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${t.subject} › ${t.chapter}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:${urgencyColor(urg)}20;color:${urgencyColor(urg)};font-weight:600">${urg.toUpperCase()}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2)">${t.repetitions} reviews</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2)">EF: ${Number(t.easeFactor).toFixed(2)}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2)">Interval: ${t.interval}d</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text3)">Next review</div>
+        <div style="font-family:var(--mono);font-size:14px;color:${nextDays===0?'var(--red)':'var(--text)'};font-weight:600">
+          ${nextDays === 0 ? 'TODAY' : `in ${nextDays}d`}
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">20-day retention history</div>
+      <svg width="100%" height="40" viewBox="0 0 400 40" preserveAspectRatio="none" style="display:block">
+        <defs>
+          <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${style.color}" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="${style.color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,${40-retHistory[0]*0.36} ${retHistory.map((v,i)=>`L${i*21},${40-v*0.36}`).join(' ')} L${19*21},40 L0,40 Z"
+          fill="url(#sparkGrad)"/>
+        <polyline points="${retHistory.map((v,i)=>`${i*21},${40-v*0.36}`).join(' ')}"
+          fill="none" stroke="${style.color}" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="0" y1="${40-50*0.36}" x2="400" y2="${40-50*0.36}" stroke="var(--border2)" stroke-width="0.5" stroke-dasharray="4,4"/>
+      </svg>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Rate your recall (SM-2)</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${[
+          {q:0,label:'0',desc:'Blackout',color:'#ff4757'},
+          {q:1,label:'1',desc:'Wrong',color:'#ff6b81'},
+          {q:2,label:'2',desc:'Familiar',color:'#ff9f43'},
+          {q:3,label:'3',desc:'Correct+',color:'#ffd166'},
+          {q:4,label:'4',desc:'Good',color:'#06d6a0'},
+          {q:5,label:'5',desc:'Perfect',color:'#6c63ff'},
+        ].map(r => `
+          <button class="rate-btn" onclick="rateRecall('${t.id}',${r.q})"
+            style="background:${r.color}20;color:${r.color};border:1px solid ${r.color}40;flex:1;min-width:40px;flex-direction:column;height:44px;font-size:13px">
+            <span style="font-size:14px;font-weight:700">${r.label}</span>
+            <span style="font-size:8px;font-weight:400;opacity:.8">${r.desc}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">
+        After rating, next revision date is recalculated server-side using SM-2.
+      </div>
+    </div>
+    ${prereqHTML}
+  </div>`;
+}
+
+// ============================================================
+//  DRAW FORGETTING CURVES
+// ============================================================
+let curveFilter = 'all';
+function filterCurve(el, filter) {
+  curveFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  drawForgettingCurves(filter);
+}
+
+function drawForgettingCurves(filter) {
+  const canvas = document.getElementById('fcCanvas');
+  if (!canvas) return;
+  const W = canvas.offsetWidth || 700;
+  const H = 320;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const pad = {top:30, right:20, bottom:40, left:50};
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0e0f1a';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle = '#1a1b2e';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.top + ch * (1 - i/5);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+cw, y); ctx.stroke();
+    ctx.fillStyle = '#5a5f8a';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(i*20+'%', pad.left - 6, y + 4);
+  }
+
+  ctx.fillStyle = '#5a5f8a';
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let d = 0; d <= 30; d += 5) {
+    const x = pad.left + cw * d / 30;
+    ctx.fillText(d+'d', x, H - 6);
+    if (d > 0) {
+      ctx.strokeStyle = '#141526'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top+ch); ctx.stroke();
+    }
+  }
+
+  const threshY = pad.top + ch * 0.5;
+  ctx.setLineDash([5,4]); ctx.strokeStyle = '#353860'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, threshY); ctx.lineTo(pad.left+cw, threshY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#353860'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('Review threshold', pad.left+4, threshY - 4);
+
+  ctx.strokeStyle = '#353860'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+ch); ctx.lineTo(pad.left+cw, pad.top+ch); ctx.stroke();
+
+  let toShow = topics;
+  if (filter === 'critical') toShow = topics.filter(t => urgency(t) === 'critical' || urgency(t) === 'soon');
+  else if (filter !== 'all') toShow = topics.filter(t => t.subject === filter);
+
+  const DAYS_RANGE = 30;
+  const now = Date.now();
+  canvas._curveHits = [];
+
+  toShow.forEach(t => {
+    const urg = urgency(t);
+    const color = urgencyColor(urg);
+    const isSelected = selectedTopic && selectedTopic.id === t.id;
+    const alpha = isSelected ? 1 : (selectedTopic ? 0.25 : 0.7);
+    const lastStudied = new Date(t.lastStudied).getTime();
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isSelected ? 2.5 : 1.2;
+    ctx.globalAlpha = alpha;
+
+    for (let d = 0; d <= DAYS_RANGE; d++) {
+      const timeOffset = (d - (now - lastStudied) / 86400000);
+      const R = Math.max(0.02, Math.exp(-Math.max(0, timeOffset) / Math.max(0.5, t.interval * 0.7)));
+      const x = pad.left + cw * d / DAYS_RANGE;
+      const y = pad.top + ch * (1 - R);
+      if (d === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    const daysSince = (now - lastStudied) / 86400000;
+    const currentX = pad.left + cw * Math.min(daysSince, DAYS_RANGE) / DAYS_RANGE;
+    const ret = retention(t);
+    const currentY = pad.top + ch * (1 - ret);
+
+    ctx.beginPath();
+    ctx.arc(currentX, currentY, isSelected ? 5 : 3, 0, Math.PI*2);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    if (isSelected || (urg === 'critical' && !selectedTopic)) {
+      ctx.font = isSelected ? '600 11px Space Grotesk' : '10px Space Grotesk';
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.9;
+      ctx.textAlign = 'left';
+      const labelX = Math.min(currentX + 6, pad.left + cw - 80);
+      ctx.fillText(t.name.length > 18 ? t.name.substring(0,16)+'…' : t.name, labelX, currentY - 6);
+      ctx.globalAlpha = 1;
+    }
+
+    const nextDue = new Date(t.nextDue).getTime();
+    const dueX = pad.left + cw * Math.min((nextDue - now + daysSince*86400000) / (86400000*DAYS_RANGE), 1);
+    if (dueX < pad.left + cw) {
+      ctx.strokeStyle = color; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.4;
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(dueX, pad.top); ctx.lineTo(dueX, pad.top+ch); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+
+    canvas._curveHits.push({topic: t, cx: currentX, cy: currentY});
+  });
+
+  ctx.strokeStyle = '#6c63ff'; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+ch); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#6c63ff'; ctx.font = '9px Space Grotesk'; ctx.textAlign = 'center';
+  ctx.fillText('NOW', pad.left, pad.top - 10);
+}
+
+function attachFCHover() {
+  const canvas = document.getElementById('fcCanvas');
+  if (!canvas) return;
+  canvas.onmousemove = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    if (!canvas._curveHits) return;
+    const hit = canvas._curveHits.find(h => Math.hypot(h.cx-mx, h.cy-my) < 12);
+    const tt = document.getElementById('tooltip');
+    if (hit) {
+      const t = hit.topic;
+      document.getElementById('tt-title').textContent = t.name;
+      document.getElementById('tt-ret').textContent = retentionPercent(t) + '%';
+      document.getElementById('tt-next').textContent = daysUntilDue(t) === 0 ? 'TODAY' : `in ${daysUntilDue(t)} days`;
+      document.getElementById('tt-int').textContent = t.interval + ' days';
+      document.getElementById('tt-rep').textContent = t.repetitions;
+      tt.style.display = 'block';
+      tt.style.left = (e.clientX + 12) + 'px';
+      tt.style.top = (e.clientY - 40) + 'px';
+    } else {
+      tt.style.display = 'none';
+    }
+  };
+  canvas.onmouseleave = () => { document.getElementById('tooltip').style.display = 'none'; };
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    if (!canvas._curveHits) return;
+    const hit = canvas._curveHits.find(h => Math.hypot(h.cx-mx, h.cy-my) < 12);
+    if (hit) selectTopic(hit.topic.id);
+  };
+}
+
+// ============================================================
+//  RATE RECALL — calls API, updates local state from response
+// ============================================================
+async function rateRecall(id, q) {
+  const msgs = ['Blackout — resetting to day 1','Very hard — try again tomorrow','Hard — short interval','OK — slight boost','Good — interval extended!','Perfect! — major interval boost'];
+  const colors = ['var(--red)','#ff6b81','var(--orange)','var(--gold)','var(--teal)','var(--accent)'];
+  showToast(msgs[q], colors[q]);
+
+  try {
+    const res = await fetch('/srs/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicId: id, quality: q })
+    });
+    if (!res.ok) { showToast('Failed to save review', 'var(--red)'); return; }
+    const updated = await res.json();
+    updated.id = updated._id || updated.id;
+    topicMap[id] = updated;
+    topics = topics.map(t => t.id === id ? updated : t);
+    renderTopicList();
+    renderMain();
+  } catch (e) {
+    showToast('Network error — try again', 'var(--red)');
+  }
+}
+
+function showToast(msg, color) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    Object.assign(toast.style, {
+      position:'fixed',bottom:'20px',right:'20px',zIndex:'9999',
+      padding:'10px 16px',borderRadius:'8px',fontSize:'13px',fontWeight:'600',
+      transition:'all .3s',transform:'translateY(20px)',opacity:'0'
+    });
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = color;
+  toast.style.color = 'white';
+  toast.style.transform = 'translateY(0)';
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateY(10px)'; }, 2200);
+}
+
+// ============================================================
+//  REVIEW QUEUE TAB
+// ============================================================
+function renderQueueTab(el) {
+  const now = Date.now();
+  const dueTopics = topics
+    .filter(t => now >= new Date(t.nextDue).getTime() || retentionPercent(t) < 50)
+    .sort((a,b) => retentionPercent(a) - retentionPercent(b));
+
+  const upcoming = topics
+    .filter(t => now < new Date(t.nextDue).getTime() && retentionPercent(t) >= 50)
+    .sort((a,b) => new Date(a.nextDue) - new Date(b.nextDue))
+    .slice(0, 10);
+
+  el.innerHTML = `
+    <div class="section">
+      <div class="section-title">
+        <div class="dot" style="background:var(--red)"></div>
+        Due Now — ${dueTopics.length} topics
+      </div>
+      <div class="review-queue">
+        ${dueTopics.length === 0
+          ? '<div style="color:var(--text3);font-size:12px;padding:16px;background:var(--surface);border-radius:8px;text-align:center">All caught up! No topics due today.</div>'
+          : dueTopics.map(t => {
+              const ret = retentionPercent(t);
+              const urg = urgency(t);
+              const color = urgencyColor(urg);
+              const overdue = Math.round((now - new Date(t.nextDue).getTime()) / 86400000);
+              return `<div class="review-card rc-${urg}">
+                <div class="review-card-ret" style="color:${color}">${ret}%</div>
+                <div class="review-card-info" onclick="selectTopic('${t.id}');showTab('fc')">
+                  <div class="review-card-name">${t.name}</div>
+                  <div class="review-card-sub">${t.subject} · ${t.chapter} · ${t.repetitions} past reviews · EF ${Number(t.easeFactor).toFixed(2)}</div>
+                  <div class="review-card-next" style="color:${color}">${overdue > 0 ? `${overdue}d overdue` : 'Due today'}</div>
+                </div>
+                <div class="review-actions">
+                  ${[1,3,5].map(q => {
+                    const labels = {1:'Hard',3:'OK',5:'Easy'};
+                    const btnColors = {1:'#ff4757',3:'#ffd166',5:'#06d6a0'};
+                    return `<button class="recall-btn" onclick="rateRecall('${t.id}',${q})"
+                      style="background:${btnColors[q]}20;color:${btnColors[q]};border:1px solid ${btnColors[q]}30;font-size:9px;width:40px;height:40px;border-radius:6px;flex-direction:column;gap:0">
+                      <span style="font-size:11px;font-weight:700">${q}</span>
+                      <span style="font-size:8px">${labels[q]}</span>
+                    </button>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">
+        <div class="dot" style="background:var(--teal)"></div>
+        Upcoming — Next 10 Scheduled Revisions
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${upcoming.length === 0
+          ? '<div style="color:var(--text3);font-size:12px;padding:16px;background:var(--surface);border-radius:8px;text-align:center">No upcoming revisions scheduled yet.</div>'
+          : upcoming.map(t => {
+              const dDue = daysUntilDue(t);
+              const ret = retentionPercent(t);
+              const projRet = retentionPercent(t, new Date(t.nextDue).getTime());
+              const color = urgencyColor(urgency(t));
+              return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;cursor:pointer"
+                onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'"
+                onclick="selectTopic('${t.id}');showTab('fc')">
+                <div style="font-family:var(--mono);font-size:13px;font-weight:700;min-width:32px;text-align:center;color:var(--text2)">+${dDue}d</div>
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:600">${t.name}</div>
+                  <div style="font-size:10px;color:var(--text3)">${t.subject} · Projected retention at review: ${projRet}%</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:var(--mono);font-size:13px;color:${color};font-weight:600">${ret}%</div>
+                  <div style="font-size:9px;color:var(--text3)">now</div>
+                </div>
+              </div>`;
+            }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+//  KNOWLEDGE GRAPH TAB
+// ============================================================
+let kgPhysics = { nodes: [], edges: [], running: true, frame: null };
+let kgFilter = 'all';
+
+function renderKGTab(el) {
+  el.innerHTML = `
+    <div class="section">
+      <div class="section-title">
+        <div class="dot" style="background:var(--teal)"></div>
+        Dynamic Learner Knowledge Graph
+      </div>
+      <div class="kg-controls">
+        <div class="filter-chip active" onclick="setKGFilter(this,'all')">All Subjects</div>
+        <div class="filter-chip" onclick="setKGFilter(this,'Physics')">Physics</div>
+        <div class="filter-chip" onclick="setKGFilter(this,'Math')">Math</div>
+        <div class="filter-chip" onclick="setKGFilter(this,'Chemistry')">Chemistry</div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="resetKGLayout()">Reset Layout</button>
+          <button class="btn btn-outline btn-sm" onclick="kgPhysics.running=!kgPhysics.running">Pause/Resume</button>
+        </div>
+      </div>
+      <div class="kg-legend">
+        <div style="font-size:10px;color:var(--text3);margin-right:4px;text-transform:uppercase;letter-spacing:.5px">Retention:</div>
+        <div class="kg-legend-item"><div class="kg-dot" style="background:var(--accent)"></div>&gt;75% Strong</div>
+        <div class="kg-legend-item"><div class="kg-dot" style="background:var(--teal)"></div>55–75% OK</div>
+        <div class="kg-legend-item"><div class="kg-dot" style="background:var(--orange)"></div>35–55% Soon</div>
+        <div class="kg-legend-item"><div class="kg-dot" style="background:var(--red)"></div>&lt;35% Critical</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">Node size = study count · Drag to rearrange</div>
+      </div>
+      <canvas id="kgCanvas" height="480"></canvas>
+      <div id="kgSelectedInfo" style="margin-top:12px"></div>
+    </div>
+  `;
+  setTimeout(() => initKnowledgeGraph(), 80);
+}
+
+function setKGFilter(el, filter) {
+  kgFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  initKnowledgeGraph();
+}
+
+function resetKGLayout() {
+  kgPhysics.nodes.forEach(n => { n.vx = 0; n.vy = 0; });
+  const canvas = document.getElementById('kgCanvas');
+  if (canvas) initKGPositions(kgPhysics.nodes, canvas.width, 480);
+  kgPhysics.running = true;
+}
+
+function getNodeColor(t) {
+  const ret = retentionPercent(t);
+  if (ret >= 75) return '#6c63ff';
+  if (ret >= 55) return '#06d6a0';
+  if (ret >= 35) return '#ff9f43';
+  return '#ff4757';
+}
+
+function getSubjectColor(subject) {
+  return {Physics:'#ff6584',Math:'#6c63ff',Chemistry:'#4ecdc4',Biology:'#06d6a0'}[subject] || '#9196c4';
+}
+
+let dragNode = null, dragOffX = 0, dragOffY = 0;
+
+function initKGPositions(nodes, W, H) {
+  const subjectCenters = {
+    Physics: {x: W*0.25, y: H*0.3},
+    Math: {x: W*0.75, y: H*0.3},
+    Chemistry: {x: W*0.5, y: H*0.72},
+    Biology: {x: W*0.5, y: H*0.5},
+  };
+  nodes.forEach((n,i) => {
+    const center = subjectCenters[n.topic.subject] || {x:W/2, y:H/2};
+    const angle = (i / nodes.length) * Math.PI * 2;
+    const r = 60 + Math.random()*40;
+    n.x = center.x + Math.cos(angle) * r;
+    n.y = center.y + Math.sin(angle) * r;
+    n.vx = 0; n.vy = 0;
+  });
+}
+
+function initKnowledgeGraph() {
+  const canvas = document.getElementById('kgCanvas');
+  if (!canvas) return;
+  const W = canvas.offsetWidth || 700;
+  const H = 480;
+  canvas.width = W;
+  canvas.height = H;
+
+  const visTopics = kgFilter === 'all' ? topics : topics.filter(t => t.subject === kgFilter);
+  const nodes = visTopics.map(t => ({
+    id: t.id, topic: t,
+    x: 0, y: 0, vx: 0, vy: 0,
+    r: Math.min(28, Math.max(12, 8 + t.repetitions * 3)),
+  }));
+  const nodeMap = {};
+  nodes.forEach(n => nodeMap[n.id] = n);
+
+  initKGPositions(nodes, W, H);
+
+  // Build edges — prerequisites may be objects or id strings
+  const edges = [];
+  visTopics.forEach(t => {
+    if (!t.prerequisites) return;
+    t.prerequisites.forEach(p => {
+      const pid = typeof p === 'object' ? (p._id || p.id) : p;
+      if (nodeMap[pid]) edges.push({from: pid, to: t.id});
+    });
+  });
+
+  kgPhysics.nodes = nodes;
+  kgPhysics.edges = edges;
+  kgPhysics.running = true;
+  if (kgPhysics.frame) cancelAnimationFrame(kgPhysics.frame);
+
+  let hoveredNode = null;
+
+  canvas.onmousedown = function(e) {
+    const {x, y} = canvasPos(canvas, e);
+    const hit = nodes.find(n => Math.hypot(n.x-x, n.y-y) < n.r + 4);
+    if (hit) { dragNode = hit; dragOffX = x - hit.x; dragOffY = y - hit.y; }
+  };
+  canvas.onmousemove = function(e) {
+    const {x, y} = canvasPos(canvas, e);
+    if (dragNode) { dragNode.x = x - dragOffX; dragNode.y = y - dragOffY; dragNode.vx = 0; dragNode.vy = 0; }
+    hoveredNode = nodes.find(n => Math.hypot(n.x-x, n.y-y) < n.r + 4) || null;
+    const tt = document.getElementById('tooltip');
+    if (hoveredNode) {
+      const t = hoveredNode.topic;
+      document.getElementById('tt-title').textContent = t.name;
+      document.getElementById('tt-ret').textContent = retentionPercent(t) + '%';
+      document.getElementById('tt-next').textContent = daysUntilDue(t) === 0 ? 'TODAY' : `in ${daysUntilDue(t)} days`;
+      document.getElementById('tt-int').textContent = t.interval + ' days';
+      document.getElementById('tt-rep').textContent = t.repetitions;
+      tt.style.display = 'block';
+      tt.style.left = (e.clientX + 12) + 'px';
+      tt.style.top = (e.clientY - 40) + 'px';
+      canvas.style.cursor = 'pointer';
+    } else {
+      tt.style.display = 'none';
+      canvas.style.cursor = dragNode ? 'grabbing' : 'grab';
+    }
+  };
+  canvas.onmouseup = function() { dragNode = null; };
+  canvas.onmouseleave = function() {
+    dragNode = null;
+    document.getElementById('tooltip').style.display = 'none';
+    canvas.style.cursor = 'grab';
+  };
+  canvas.onclick = function(e) {
+    const {x, y} = canvasPos(canvas, e);
+    const hit = nodes.find(n => Math.hypot(n.x-x, n.y-y) < n.r+4);
+    if (hit) {
+      selectTopic(hit.id);
+      const info = document.getElementById('kgSelectedInfo');
+      if (info) info.innerHTML = renderTopicDetail(topicMap[hit.id]);
+    }
+  };
+
+  function tick() {
+    if (!document.getElementById('kgCanvas')) { cancelAnimationFrame(kgPhysics.frame); return; }
+    if (kgPhysics.running) {
+      const W2 = canvas.width, H2 = canvas.height;
+      const k = 0.05, repulsion = 4000, damping = 0.85;
+      nodes.forEach(n => { if (n === dragNode) return; n.vx *= damping; n.vy *= damping; });
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i+1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.max(1, Math.hypot(dx, dy));
+          if (dist < (a.r + b.r + 20) * 3) {
+            const force = repulsion / (dist * dist);
+            const fx = (dx/dist) * force, fy = (dy/dist) * force;
+            if (a !== dragNode) { a.vx -= fx; a.vy -= fy; }
+            if (b !== dragNode) { b.vx += fx; b.vy += fy; }
+          }
+        }
+      }
+      edges.forEach(e => {
+        const a = nodeMap[e.from], b = nodeMap[e.to];
+        if (!a || !b) return;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const targetDist = (a.r + b.r) * 3.5;
+        const force = k * (dist - targetDist);
+        const fx = (dx/dist) * force, fy = (dy/dist) * force;
+        if (a !== dragNode) { a.vx += fx; a.vy += fy; }
+        if (b !== dragNode) { b.vx -= fx; b.vy -= fy; }
+      });
+      nodes.forEach(n => {
+        if (n === dragNode) return;
+        n.vx += (W2/2 - n.x) * 0.002;
+        n.vy += (H2/2 - n.y) * 0.002;
+        n.x += n.vx; n.y += n.vy;
+        n.x = Math.max(n.r+5, Math.min(W2-n.r-5, n.x));
+        n.y = Math.max(n.r+5, Math.min(H2-n.r-5, n.y));
+      });
+    }
+    drawKG(canvas, nodes, edges, nodeMap, hoveredNode, selectedTopic);
+    kgPhysics.frame = requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function canvasPos(canvas, e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function drawKG(canvas, nodes, edges, nodeMap, hoveredNode, selTopic) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0e0f1a'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#1a1b2e'; ctx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  edges.forEach(e => {
+    const a = nodeMap[e.from], b = nodeMap[e.to];
+    if (!a || !b) return;
+    const selId = selTopic ? selTopic.id : null;
+    const isHighlighted = selId && (a.id === selId || b.id === selId);
+    const isWeak = retentionPercent(a.topic) < 50 || retentionPercent(b.topic) < 50;
+    ctx.globalAlpha = isHighlighted ? 0.9 : (selId ? 0.1 : 0.3);
+    ctx.strokeStyle = isWeak ? '#ff4757' : '#6c63ff';
+    ctx.lineWidth = isHighlighted ? 2 : 1;
+    ctx.setLineDash(isWeak ? [4,3] : []);
+    const mx = (a.x + b.x)/2 + (b.y - a.y)*0.15;
+    const my = (a.y + b.y)/2 - (b.x - a.x)*0.15;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(mx, my, b.x, b.y); ctx.stroke();
+    ctx.setLineDash([]);
+    if (isHighlighted) {
+      const angle = Math.atan2(b.y - my, b.x - mx);
+      const ax = b.x - Math.cos(angle) * (b.r + 2);
+      const ay = b.y - Math.sin(angle) * (b.r + 2);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay); ctx.lineTo(ax - 8*Math.cos(angle-0.4), ay - 8*Math.sin(angle-0.4));
+      ctx.moveTo(ax, ay); ctx.lineTo(ax - 8*Math.cos(angle+0.4), ay - 8*Math.sin(angle+0.4));
+      ctx.strokeStyle = isWeak ? '#ff4757' : '#6c63ff'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  nodes.forEach(n => {
+    const t = n.topic;
+    const color = getNodeColor(t);
+    const subColor = getSubjectColor(t.subject);
+    const isHovered = hoveredNode && hoveredNode.id === n.id;
+    const isSelected = selTopic && selTopic.id === n.id;
+    const isPrereq = selTopic && selTopic.prerequisites && selTopic.prerequisites.some(p => {
+      const pid = typeof p === 'object' ? (p._id || p.id) : p;
+      return pid === n.id;
+    });
+    const isDependent = selTopic && n.topic.prerequisites && n.topic.prerequisites.some(p => {
+      const pid = typeof p === 'object' ? (p._id || p.id) : p;
+      return pid === selTopic.id;
+    });
+    const alpha = selTopic ? (isSelected || isPrereq || isDependent ? 1 : 0.3) : 1;
+    ctx.globalAlpha = alpha;
+    const radius = isHovered ? n.r + 3 : n.r;
+
+    if (isSelected || urgency(t) === 'critical') {
+      ctx.beginPath(); ctx.arc(n.x, n.y, radius + 8, 0, Math.PI*2);
+      const grd = ctx.createRadialGradient(n.x, n.y, radius, n.x, n.y, radius+8);
+      grd.addColorStop(0, color+'60'); grd.addColorStop(1, color+'00');
+      ctx.fillStyle = grd; ctx.fill();
+    }
+
+    ctx.beginPath(); ctx.arc(n.x, n.y, radius + 3, 0, Math.PI*2);
+    ctx.strokeStyle = subColor + '40'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(n.x, n.y, radius, 0, Math.PI*2);
+    ctx.fillStyle = color + '22'; ctx.fill();
+
+    ctx.beginPath(); ctx.arc(n.x, n.y, radius, 0, Math.PI*2);
+    ctx.strokeStyle = isSelected ? 'white' : color;
+    ctx.lineWidth = isSelected ? 2.5 : 1.5; ctx.stroke();
+
+    const retFrac = retention(t);
+    ctx.beginPath(); ctx.moveTo(n.x, n.y);
+    ctx.arc(n.x, n.y, radius - 2, -Math.PI/2, -Math.PI/2 + retFrac * Math.PI * 2);
+    ctx.closePath(); ctx.fillStyle = color + '40'; ctx.fill();
+
+    ctx.fillStyle = isSelected ? 'white' : '#e8eaf6';
+    ctx.font = `${isSelected ? '600 ' : ''}${Math.min(11, Math.max(8, n.r * 0.6))}px Space Grotesk`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const maxChars = Math.floor(radius * 1.5 / 4);
+    const label = t.name.length > maxChars ? t.name.substring(0, maxChars-1) + '…' : t.name;
+    ctx.shadowColor = '#07080f'; ctx.shadowBlur = 4;
+    ctx.fillText(label, n.x, n.y - 2); ctx.shadowBlur = 0;
+
+    if (radius > 16) {
+      ctx.font = '500 9px JetBrains Mono';
+      ctx.fillStyle = color;
+      ctx.fillText(retentionPercent(t) + '%', n.x, n.y + radius*0.55);
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  const subjects = [...new Set(nodes.map(n => n.topic.subject))];
+  subjects.forEach(s => {
+    const sNodes = nodes.filter(n => n.topic.subject === s);
+    if (!sNodes.length) return;
+    const cx = sNodes.reduce((sum,n) => sum+n.x,0)/sNodes.length;
+    const cy = sNodes.reduce((sum,n) => sum+n.y,0)/sNodes.length;
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = getSubjectColor(s);
+    ctx.font = '700 13px Space Grotesk';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s.toUpperCase(), cx, cy - 50);
+    ctx.globalAlpha = 1;
+  });
+}
+
+// ============================================================
+//  MINI GRAPH (sidebar)
+// ============================================================
+function drawMiniGraph() {
+  const canvas = document.getElementById('miniGraph');
+  if (!canvas) return;
+  const W = canvas.offsetWidth || 280;
+  const H = 120;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const pad = 12;
+  const subjectPos = {
+    Physics:{x:W*0.25,y:H*0.35}, Math:{x:W*0.75,y:H*0.35},
+    Chemistry:{x:W*0.5,y:H*0.75}, Biology:{x:W*0.5,y:H*0.5}
+  };
+  topics.forEach(t => {
+    if (!t.prerequisites) return;
+    t.prerequisites.forEach(p => {
+      const pid = typeof p === 'object' ? (p._id || p.id) : p;
+      const pt = topicMap[pid];
+      if (!pt) return;
+      const sc = subjectPos[t.subject], sp = subjectPos[pt.subject];
+      if (!sc || !sp) return;
+      ctx.beginPath(); ctx.strokeStyle = '#6c63ff30'; ctx.lineWidth = 0.5;
+      ctx.moveTo(sc.x + (Math.random()-0.5)*30, sc.y + (Math.random()-0.5)*20);
+      ctx.lineTo(sp.x + (Math.random()-0.5)*30, sp.y + (Math.random()-0.5)*20);
+      ctx.stroke();
+    });
+  });
+  topics.forEach((t,i) => {
+    const sp = subjectPos[t.subject];
+    if (!sp) return;
+    const angle = (i % 8) / 8 * Math.PI * 2;
+    const r = 15 + (i % 3) * 8;
+    const x = Math.max(pad, Math.min(W-pad, sp.x + Math.cos(angle)*r));
+    const y = Math.max(pad, Math.min(H-pad, sp.y + Math.sin(angle)*r));
+    const color = getNodeColor(t);
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2);
+    ctx.fillStyle = color + '90'; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 0.8; ctx.stroke();
+  });
+  Object.entries(subjectPos).forEach(([s, pos]) => {
+    if (!topics.filter(t => t.subject === s).length) return;
+    ctx.fillStyle = getSubjectColor(s) + 'a0';
+    ctx.font = '9px Space Grotesk'; ctx.textAlign = 'center';
+    ctx.fillText(s, pos.x, pos.y - 16);
+  });
+}
+
+// ============================================================
+//  ADD TOPIC — saves to MongoDB via API
+// ============================================================
+async function addTopic() {
+  const name = document.getElementById('newTopicName').value.trim();
+  if (!name) { showToast('Please enter a topic name', 'var(--red)'); return; }
+
+  const btn = document.querySelector('.add-form .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  try {
+    const res = await fetch('/srs/topics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        subject: document.getElementById('newTopicSubject').value,
+        chapter: document.getElementById('newTopicChapter').value,
+        exam: '<%= user.selectedExam || "JEE" %>'
+      })
+    });
+    if (!res.ok) { showToast('Failed to save topic', 'var(--red)'); return; }
+    const newTopic = await res.json();
+    newTopic.id = newTopic._id || newTopic.id;
+    topics.push(newTopic);
+    topicMap[newTopic.id] = newTopic;
+    document.getElementById('newTopicName').value = '';
+    document.getElementById('newTopicPrereq').value = '';
+    renderTopicList();
+    renderMain();
+    drawMiniGraph();
+    showToast(`"${name}" added!`, 'var(--teal)');
+  } catch (e) {
+    showToast('Network error — try again', 'var(--red)');
+  } finally {
+    btn.textContent = '+ Add to Knowledge Graph'; btn.disabled = false;
+  }
+}
+
+// ============================================================
+//  BOOT — load topics from MongoDB via API
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/srs/topics');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    if (!res.ok) throw new Error('Failed to load topics');
+
+    const data = await res.json();
+    topics = data.map(t => ({ ...t, id: t._id || t.id }));
+    topicMap = {};
+    topics.forEach(t => topicMap[t.id] = t);
+
+    renderTopicList();
+    renderMain();
+    drawMiniGraph();
+    window.addEventListener('resize', drawMiniGraph);
+  } catch (e) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="loading-state" style="color:var(--red)">
+        <div style="font-size:24px">⚠</div>
+        <span>Failed to load topics. <a href="/srs/page" style="color:var(--accent)">Retry</a></span>
+      </div>`;
+    document.getElementById('topicList').innerHTML = '';
+    document.getElementById('topicCount').textContent = 'Error';
+  }
+});
+</script>
+
+<%- include('partials/footer') %>
