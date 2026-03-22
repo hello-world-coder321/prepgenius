@@ -1,0 +1,27 @@
+﻿[dotenv@17.3.1] injecting env (4) from .env -- tip: ΓÜí∩╕Å secrets for agents: https://dotenvx.com/as2
+Γ£à MongoDB connected
+node : Γ¥î Fatal boot 
+error: TypeError: 
+MongoStore.create is 
+not a function
+At line:1 char:1
++ node server.js 2>&1 
+| Out-File -Encoding 
+utf8 log2.txt
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Γ¥î Fatal boo   
+ t ... not a functi    
+on:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+    at boot (D:\devclas
+h\server.js:72:36)
+    at process.processT
+icksAndRejections (node
+:internal/process/task_
+queues:103:5)

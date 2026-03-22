@@ -1,0 +1,122 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen pt-20 pb-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+      <div>
+        <a href="/dashboard" class="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 mb-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Back to Dashboard
+        </a>
+        <h1 class="font-display text-2xl font-bold text-white">📅 Study Planner</h1>
+        <p class="text-sm text-gray-500 mt-1">AI-generated daily plan for <span class="text-brand-400 font-semibold"><%= exam %></span></p>
+      </div>
+      <button onclick="generatePlan()" id="generate-btn" class="btn-primary text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Generate Today's Plan
+      </button>
+    </div>
+
+    <!-- Progress Bar -->
+    <% if (plan) { %>
+    <div class="glass-card p-4 mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Today's Progress</span>
+        <span class="text-sm font-bold text-brand-400" id="progress-text">
+          <%= plan.completedMinutes || 0 %> / <%= plan.totalMinutes || 0 %> min
+        </span>
+      </div>
+      <div class="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-brand-500 to-accent-500 rounded-full transition-all duration-700"
+          style="width: <%= plan.totalMinutes > 0 ? Math.round((plan.completedMinutes || 0) / plan.totalMinutes * 100) : 0 %>%"></div>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Tasks -->
+    <div id="plan-container">
+      <% if (plan && plan.tasks.length > 0) { %>
+        <div class="space-y-3">
+          <% plan.tasks.forEach((task, i) => { %>
+            <% const typeIcons = { study: '📖', revision: '🔄', quiz: '❓', practice: '✏️', break: '☕' }; %>
+            <% const priorityColors = { high: 'border-red-500/30 bg-red-500/5', medium: 'border-amber-500/20 bg-amber-500/5', low: 'border-gray-500/20 bg-gray-500/5' }; %>
+            <div class="glass-card p-4 border-l-4 <%= priorityColors[task.priority] || '' %> flex items-center gap-4 group hover:bg-white/5 transition-all cursor-pointer <%= task.completed ? 'opacity-60' : '' %>"
+                 onclick="toggleTask(<%= i %>)" id="task-<%= i %>">
+              <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                <%= task.completed ? 'bg-accent-500 border-accent-500' : 'border-gray-600 group-hover:border-brand-400' %>">
+                <% if (task.completed) { %>
+                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                <% } %>
+              </div>
+              <span class="text-xl flex-shrink-0"><%= typeIcons[task.type] || '📖' %></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-white <%= task.completed ? 'line-through' : '' %>"><%= task.topic %></p>
+                <p class="text-xs text-gray-500"><%= task.subject %> · <%= task.duration %> min · <span class="capitalize"><%= task.type %></span></p>
+                <% if (task.notes) { %>
+                  <p class="text-xs text-gray-600 mt-1"><%= task.notes %></p>
+                <% } %>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <span class="text-xs px-2 py-1 rounded-lg
+                  <%= task.priority === 'high' ? 'bg-red-500/20 text-red-400' : task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-gray-500/20 text-gray-400' %>">
+                  <%= task.priority %>
+                </span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="glass-card p-12 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-brand-500/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">No plan for today yet</h3>
+          <p class="text-sm text-gray-500 mb-6">Click "Generate Today's Plan" to get an AI-powered study schedule based on your weak areas and revision needs.</p>
+          <button onclick="generatePlan()" class="btn-primary text-sm">Generate Plan</button>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<script>
+  async function generatePlan() {
+    const btn = document.getElementById('generate-btn');
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Generating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/planner/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      location.reload();
+    } catch (e) {
+      alert('Failed to generate plan: ' + e.message);
+      btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Today\'s Plan';
+      btn.disabled = false;
+    }
+  }
+
+  async function toggleTask(index) {
+    const taskEl = document.getElementById('task-' + index);
+    try {
+      const res = await fetch('/planner/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskIndex: index }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      location.reload();
+    } catch (e) {
+      console.error('Toggle failed:', e);
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

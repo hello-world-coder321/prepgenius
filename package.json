@@ -1,0 +1,44 @@
+{
+  "name": "prepgenius",
+  "version": "1.0.0",
+  "description": "AI-powered educational platform for JEE, NEET & UPSC exam preparation",
+  "main": "server.js",
+  "scripts": {
+    "dev": "concurrently \"npx tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch\" \"nodemon server.js\"",
+    "build:css": "npx tailwindcss -i ./public/css/input.css -o ./public/css/output.css --minify",
+    "build": "npm run build:css",
+    "start": "npm run build:css && node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "education",
+    "ai",
+    "jee",
+    "neet",
+    "upsc"
+  ],
+  "author": "PrepGenius Team",
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "bcryptjs": "^3.0.3",
+    "concurrently": "^9.2.1",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^17.3.1",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "marked": "^17.0.5",
+    "mongodb-memory-server": "^11.0.1",
+    "mongoose": "^9.3.1",
+    "multer": "^2.1.1",
+    "nodemon": "^3.1.14",
+    "pdf-parse": "^2.4.5",
+    "socket.io": "^4.8.3",
+    "tailwindcss": "^3.4.19",
+    "youtube-captions-scraper": "^2.0.3",
+    "youtube-transcript": "^1.3.0"
+  }
+}
