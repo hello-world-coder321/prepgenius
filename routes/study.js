@@ -28,11 +28,9 @@ router.post('/upload', requireAuth, (req, res) => {
 
       if (req.file.mimetype === 'application/pdf') {
         try {
-          const { PDFParse } = require('pdf-parse');
+          const pdfParse = require('pdf-parse');
           const pdfBuffer = fs.readFileSync(req.file.path);
-          const parser = new PDFParse({ data: pdfBuffer });
-          const pdfData = await parser.getText();
-          await parser.destroy();
+          const pdfData = await pdfParse(pdfBuffer);
           extractedText = pdfData.text;
         } catch (err) {
           console.error('PDF Parse Error:', err);
