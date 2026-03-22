@@ -16,13 +16,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
           <span class="text-sm text-gray-300 flex items-center gap-2">Target:
-            <select id="target-year-select" class="bg-gray-800 text-white font-bold outline-none cursor-pointer hover:bg-gray-700 transition-colors rounded-lg px-2 py-1 border border-gray-700 focus:border-brand-500" onchange="updateTargetYear(this.value)">
+            <select id="target-year-select" class="bg-gray-800 text-white font-bold outline-none cursor-pointer hover:bg-gray-700 transition-colors rounded-lg px-2 py-1 border border-gray-700 focus:border-brand-500" onchange="updateTargetYear(this.value); updateCountdown(this.value);">
               <% const cYear = new Date().getFullYear(); %>
               <% for(let y = cYear; y <= cYear + 5; y++) { %>
                 <option value="<%= y %>" class="bg-gray-900 text-white" <%= y == targetYear ? 'selected' : '' %>><%= y %></option>
               <% } %>
             </select>
           </span>
+          <div id="exam-countdown" class="ml-2 transition-all"></div>
         </div>
       </div>
     </div>
@@ -274,6 +275,57 @@
 </main>
 
 <script>
+  const CURRENT_EXAM = "<%= typeof exam !== 'undefined' ? exam.toUpperCase() : 'GENERAL' %>";
+
+  async function updateCountdown(yearStr) {
+    const container = document.getElementById('exam-countdown');
+    container.innerHTML = `<div class="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse"></div>
+                           <span class="text-xs font-bold text-brand-400 tracking-wide">AI Checking Dates...</span>`;
+    container.className = "ml-2 px-3 py-1 bg-brand-500/10 border border-brand-500/20 rounded-full flex items-center gap-2 shadow-lg shadow-brand-500/5";
+
+    const year = parseInt(yearStr);
+    let examDate;
+    
+    try {
+      const res = await fetch(`/api/exam-date?exam=${CURRENT_EXAM}&year=${year}`);
+      const data = await res.json();
+      if (data.date) {
+        const parts = data.date.split('-');
+        examDate = new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
+      }
+    } catch (e) { console.error('AI Date Fetch Error:', e); }
+
+    // Approximate typical exam dates in India if AI says "NO"
+    if (!examDate) {
+      if (CURRENT_EXAM.includes('JEE')) {
+        examDate = new Date(year, 3, 10); // April 10
+      } else if (CURRENT_EXAM.includes('NEET')) {
+        examDate = new Date(year, 4, 5); // May 5
+      } else if (CURRENT_EXAM.includes('UPSC')) {
+        examDate = new Date(year, 4, 26); // May 26
+      } else {
+        examDate = new Date(year, 5, 1); // Generic June 1
+      }
+    }
+
+    const today = new Date();
+    const diffTime = examDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      container.innerHTML = `<span class="text-xs font-bold text-gray-400">Exam Passed</span>`;
+      container.className = "ml-2 px-3 py-1 bg-gray-500/10 border border-gray-500/20 rounded-full";
+    } else {
+      container.innerHTML = `<div class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></div>
+                             <span class="text-xs font-bold text-amber-400 tracking-wide">${diffDays} Days Left</span>`;
+      container.className = "ml-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center gap-2 shadow-lg shadow-amber-500/5";
+    }
+  }
+
+  // Initialize countdown immediately
+  const selectNode = document.getElementById('target-year-select');
+  if (selectNode) updateCountdown(selectNode.value);
+
   function openQuizModal() {
     document.getElementById('quiz-modal').classList.add('active');
   }

@@ -149,6 +149,27 @@ async function boot() {
     socket.on('disconnect', () => console.log('🔌 Socket disconnected:', socket.id));
   });
 
+  // ── Exam Date Fetcher ──
+  app.get('/api/exam-date', require('./routes/auth').requireAuth, async (req, res) => {
+    try {
+      const { exam, year } = req.query;
+      const prompt = `Has the official exam date for ${exam} in the year ${year} been released? If yes, reply ONLY with the exact date in YYYY-MM-DD format (e.g. 2024-05-05). If no official date is released or you are unsure, reply ONLY with the word "NO". Do not provide any other text.`;
+      
+      const response = await grokAI.chatCompletion([
+        { role: 'system', content: 'You are a precise data extraction bot. You only reply with YYYY-MM-DD or NO.' },
+        { role: 'user', content: prompt }
+      ], { temperature: 0.1 });
+      
+      const text = response.trim();
+      if (text !== 'NO' && text.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return res.json({ date: text });
+      }
+      return res.json({ date: null });
+    } catch (e) {
+      res.json({ date: null });
+    }
+  });
+
   // Error handler
   app.use((err, req, res, next) => {
     console.error(err.stack);
