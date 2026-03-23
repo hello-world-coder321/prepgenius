@@ -559,7 +559,7 @@ function renderTopicDetail(t) {
       }).join('')}
     </div>` : '';
 
-  return `<div class="topic-detail">
+    return `<div class="topic-detail">
     <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px">
       <div style="width:56px;height:56px;border-radius:50%;border:3px solid ${style.color};
         display:flex;align-items:center;justify-content:center;
@@ -577,13 +577,23 @@ function renderTopicDetail(t) {
           <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2)">Interval: ${t.interval}d</span>
         </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--text3)">Next review</div>
-        <div style="font-family:var(--mono);font-size:14px;color:${nextDays===0?'var(--red)':'var(--text)'};font-weight:600">
-          ${nextDays === 0 ? 'TODAY' : `in ${nextDays}d`}
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div>
+          <div style="font-size:11px;color:var(--text3)">Next review</div>
+          <div style="font-family:var(--mono);font-size:14px;color:${nextDays===0?'var(--red)':'var(--text)'};font-weight:600">
+            ${nextDays === 0 ? 'TODAY' : `in ${nextDays}d`}
+          </div>
         </div>
+        <button onclick="deleteTopic('${t.id}')"
+          style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid #ff475740;
+          background:#ff475715;color:var(--red);cursor:pointer;font-family:var(--font);
+          font-weight:600;transition:all .15s"
+          onmouseover="this.style.background='#ff475730'"
+          onmouseout="this.style.background='#ff475715'">
+          Delete
+        </button>
       </div>
-    </div>
+    </div>;
     <div style="margin-bottom:12px">
       <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">20-day retention history</div>
       <svg width="100%" height="40" viewBox="0 0 400 40" preserveAspectRatio="none" style="display:block">
@@ -806,7 +816,10 @@ async function rateRecall(id, q) {
     });
     if (!res.ok) { showToast('Failed to save review', 'var(--red)'); return; }
     const updated = await res.json();
-    updated.id = updated._id || updated.id;
+    updated.id = String(updated._id || updated.id);
+    updated.prerequisites = (updated.prerequisites || []).map(p =>
+      typeof p === 'object' ? String(p._id || p.id) : String(p)
+    );
     topicMap[id] = updated;
     topics = topics.map(t => t.id === id ? updated : t);
     renderTopicList();
@@ -1020,13 +1033,15 @@ function initKnowledgeGraph() {
 
   initKGPositions(nodes, W, H);
 
-  // Build edges — prerequisites may be objects or id strings
+  // Build edges — prerequisites normalized to strings
   const edges = [];
   visTopics.forEach(t => {
     if (!t.prerequisites) return;
-    t.prerequisites.forEach(p => {
-      const pid = typeof p === 'object' ? (p._id || p.id) : p;
-      if (nodeMap[pid]) edges.push({from: pid, to: t.id});
+    t.prerequisites.forEach(pid => {
+      const pidStr = String(pid);
+      if (nodeMap[pidStr]) {
+        edges.push({ from: pidStr, to: String(t.id) });
+      }
     });
   });
 
@@ -1171,12 +1186,10 @@ function drawKG(canvas, nodes, edges, nodeMap, hoveredNode, selTopic) {
     const isHovered = hoveredNode && hoveredNode.id === n.id;
     const isSelected = selTopic && selTopic.id === n.id;
     const isPrereq = selTopic && selTopic.prerequisites && selTopic.prerequisites.some(p => {
-      const pid = typeof p === 'object' ? (p._id || p.id) : p;
-      return pid === n.id;
+      return String(p) === String(n.id);
     });
     const isDependent = selTopic && n.topic.prerequisites && n.topic.prerequisites.some(p => {
-      const pid = typeof p === 'object' ? (p._id || p.id) : p;
-      return pid === selTopic.id;
+      return String(p) === String(selTopic.id);
     });
     const alpha = selTopic ? (isSelected || isPrereq || isDependent ? 1 : 0.3) : 1;
     ctx.globalAlpha = alpha;
@@ -1288,6 +1301,33 @@ function drawMiniGraph() {
 // ============================================================
 //  ADD TOPIC — saves to MongoDB via API
 // ============================================================
+async function deleteTopic(id) {
+  if (!confirm('Delete this topic? This cannot be undone.')) return;
+
+  try {
+    const res = await fetch(`/srs/topics/${id}`, { method: 'DELETE' });
+    if (!res.ok) { showToast('Failed to delete topic', 'var(--red)'); return; }
+
+    // Remove from local state
+    topics = topics.filter(t => t.id !== id);
+    delete topicMap[id];
+
+    // Remove from other topics' prerequisites locally
+    topics.forEach(t => {
+      t.prerequisites = (t.prerequisites || []).filter(p => String(p) !== String(id));
+    });
+
+    // Clear selection if deleted topic was selected
+    if (selectedTopic && selectedTopic.id === id) selectedTopic = null;
+
+    renderTopicList();
+    renderMain();
+    drawMiniGraph();
+    showToast('Topic deleted', 'var(--red)');
+  } catch (e) {
+    showToast('Network error — try again', 'var(--red)');
+  }
+}
 async function addTopic() {
   const name = document.getElementById('newTopicName').value.trim();
   if (!name) { showToast('Please enter a topic name', 'var(--red)'); return; }
@@ -1303,12 +1343,17 @@ async function addTopic() {
         name,
         subject: document.getElementById('newTopicSubject').value,
         chapter: document.getElementById('newTopicChapter').value,
-        exam: '<%= user.selectedExam || "JEE" %>'
+        exam: '<%= user.selectedExam || "JEE" %>',
+        prerequisites: document.getElementById('newTopicPrereq').value
+          .split(',').map(s => s.trim()).filter(Boolean)
       })
     });
     if (!res.ok) { showToast('Failed to save topic', 'var(--red)'); return; }
     const newTopic = await res.json();
-    newTopic.id = newTopic._id || newTopic.id;
+    newTopic.id = String(newTopic._id || newTopic.id);
+    newTopic.prerequisites = (newTopic.prerequisites || []).map(p =>
+      typeof p === 'object' ? String(p._id || p.id) : String(p)
+    );
     topics.push(newTopic);
     topicMap[newTopic.id] = newTopic;
     document.getElementById('newTopicName').value = '';
@@ -1334,7 +1379,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!res.ok) throw new Error('Failed to load topics');
 
     const data = await res.json();
-    topics = data.map(t => ({ ...t, id: t._id || t.id }));
+    topics = data.map(t => ({
+      ...t,
+      id: String(t._id || t.id),
+      prerequisites: (t.prerequisites || []).map(p =>
+        typeof p === 'object' ? String(p._id || p.id) : String(p)
+      )
+    }));
     topicMap = {};
     topics.forEach(t => topicMap[t.id] = t);
 
