@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Topic = require('../models/Topic');
+const Revision = require('../models/Revision');
 const ReviewLog = require('../models/ReviewLog');
 const { sm2, retentionPercent, urgency } = require('../services/sm2');
 const { requireAuth } = require('./auth');
@@ -57,6 +58,20 @@ router.post('/review', requireAuthAPI, async (req, res) => {
     const updated = sm2(topic, Number(quality));
     Object.assign(topic, updated);
     await topic.save();
+
+    // LIVE SYNC -> Keep Revision database identically synced
+    await Revision.findOneAndUpdate(
+      { userId: req.session.user.id, topic: topic.name },
+      {
+        subject: topic.subject,
+        lastSeen: topic.lastStudied,
+        interval: topic.interval,
+        easeFactor: topic.easeFactor,
+        repetitions: topic.repetitions,
+        nextReviewDate: topic.nextDue
+      },
+      { upsert: true }
+    );
 
     await ReviewLog.create({
       userId: req.session.user.id,
@@ -147,6 +162,12 @@ router.delete('/topics/:id', requireAuthAPI, async (req, res) => {
       userId: req.session.user.id
     });
     if (!topic) return res.status(404).json({ error: 'Topic not found' });
+
+    // LIVE SYNC -> Delete from Revision database
+    await Revision.findOneAndDelete({
+      userId: req.session.user.id,
+      topic: topic.name
+    });
 
     // Also delete all review logs for this topic
     await ReviewLog.deleteMany({ topicId: req.params.id });

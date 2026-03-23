@@ -5,6 +5,7 @@ const Progress = require('../models/Progress');
 const Revision = require('../models/Revision');
 const User = require('../models/User');
 const { requireAuth } = require('./auth');
+const plannerController = require('../controllers/plannerController');
 
 const EXAM_SUBJECTS = {
   JEE: ['Physics', 'Chemistry', 'Mathematics'],
@@ -223,5 +224,18 @@ function generateFallbackPlan(subjects, dueRevisions) {
 
   return tasks;
 }
+
+// ══════════════════════════════════════════════════════════════
+// ── Smart Planner Endpoints (Database-driven 6+2 distribution) ──
+// ══════════════════════════════════════════════════════════════
+
+// Generate 8 smart tasks: 6 syllabus + 2 revision
+router.post('/smart-generate', requireAuth, plannerController.smartGenerate);
+
+// Toggle a smart task's completion status
+router.post('/smart-toggle/:taskId', requireAuth, plannerController.toggleSmartTask);
+
+// Get today's smart tasks with stats
+router.get('/smart-tasks', requireAuth, plannerController.getSmartTasks);
 
 module.exports = router;

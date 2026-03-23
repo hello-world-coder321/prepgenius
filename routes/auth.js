@@ -4,13 +4,7 @@ const User = require('../models/User');
 
 // ── Login Page ──
 router.get('/login', (req, res) => {
-  // If user is already logged in, destroy session so login page renders cleanly
-  if (req.session.user) {
-    req.session.destroy(() => {
-      res.render('login', { error: null, mode: 'login', user: null });
-    });
-    return;
-  }
+  if (req.session.user) return res.redirect('/dashboard');
   res.render('login', { error: null, mode: 'login' });
 });
 
@@ -78,10 +72,6 @@ router.get('/logout', (req, res) => {
 // ── Auth Middleware ──
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/login');
-  // Prevent browser from caching authenticated pages
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
   next();
 }
 

@@ -92,6 +92,7 @@ async function boot() {
   app.use('/srs', require('./routes/srs'));
 
   app.get('/', (req, res) => {
+    if (req.session.user) return res.redirect('/dashboard');
     res.redirect('/login');
   });
 
@@ -175,6 +176,14 @@ async function boot() {
     console.error(err.stack);
     res.status(500).render('error', { message: 'Something went wrong!' });
   });
+
+  // ── Daily Smart Planner Cron Job (auto-generate at 6 AM) ──
+  try {
+    const { startDailyPlannerCron } = require('./cron/dailyPlanner');
+    startDailyPlannerCron();
+  } catch (err) {
+    console.warn('⚠️  Cron job setup skipped (node-cron may not be installed):', err.message);
+  }
 
   // Start
   const PORT = process.env.PORT || 3000;

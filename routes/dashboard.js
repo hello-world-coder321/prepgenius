@@ -14,7 +14,7 @@ const EXAM_SUBJECTS = {
 
 // ── Exam Select Page ──
 router.get('/exam-select', requireAuth, (req, res) => {
-  res.render('exam-select', { hideNav: true });
+  res.render('exam-select');
 });
 
 // ── Select Exam ──
