@@ -3,6 +3,153 @@ const socket = io();
 let hintMode = false;
 let extractedText = '';
 
+// ── Voice Input/Output ──
+let voiceRecognition = null;
+let isListening = false;
+let lastDetectedLang = 'en-IN';
+
+function detectLanguage(text) {
+  // Devanagari Unicode range → Hindi
+  const devanagariRegex = /[\u0900-\u097F]/;
+  return devanagariRegex.test(text) ? 'hi-IN' : 'en-IN';
+}
+
+function stripMarkdown(md) {
+  if (!md) return '';
+  return md
+    .replace(/```[\s\S]*?```/g, '')     // remove code blocks
+    .replace(/`([^`]+)`/g, '$1')        // inline code
+    .replace(/#{1,6}\s+/g, '')          // headings
+    .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, '$1') // bold/italic
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images
+    .replace(/\[[^\]]*\]\([^)]*\)/g, '$1') // links
+    .replace(/[>\-*+] /g, '')           // list markers / blockquotes
+    .replace(/\|[^\n]+\|/g, '')         // tables
+    .replace(/\n{2,}/g, '. ')           // double newlines to pause
+    .replace(/\n/g, ' ')
+    .trim();
+}
+
+function speakText(text, lang) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel(); // stop any current speech
+  const plain = stripMarkdown(text);
+  if (!plain) return;
+
+  // Split long text into chunks (SpeechSynthesis can cut off long utterances)
+  const chunks = [];
+  const sentences = plain.match(/[^.!?।]+[.!?।]?\s*/g) || [plain];
+  let current = '';
+  for (const s of sentences) {
+    if ((current + s).length > 200) {
+      if (current) chunks.push(current.trim());
+      current = s;
+    } else {
+      current += s;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+
+  const speakChunk = (i) => {
+    if (i >= chunks.length) return;
+    const utter = new SpeechSynthesisUtterance(chunks[i]);
+    utter.lang = lang || 'en-IN';
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+
+    // Try to pick a matching voice
+    const voices = window.speechSynthesis.getVoices();
+    const langPrefix = (lang || 'en-IN').split('-')[0];
+    const match = voices.find(v => v.lang.startsWith(langPrefix));
+    if (match) utter.voice = match;
+
+    utter.onend = () => speakChunk(i + 1);
+    window.speechSynthesis.speak(utter);
+  };
+
+  // Voices may not be loaded yet
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => speakChunk(0);
+  } else {
+    speakChunk(0);
+  }
+}
+
+function stopSpeaking() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function toggleVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    addMessage('⚠️ Voice input is not supported in this browser. Please use Chrome or Edge.', 'error');
+    return;
+  }
+
+  if (isListening && voiceRecognition) {
+    voiceRecognition.stop();
+    return;
+  }
+
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.maxAlternatives = 1;
+
+  // Use lastDetectedLang so it carries over between recordings
+  // Defaults to en-IN; switches to hi-IN only after Hindi is detected
+  voiceRecognition.lang = lastDetectedLang;
+
+  const btn = document.getElementById('voice-btn');
+  const pulse = document.getElementById('voice-pulse');
+  const input = document.getElementById('doubt-input');
+
+  voiceRecognition.onstart = () => {
+    isListening = true;
+    btn.classList.add('text-red-400');
+    btn.classList.remove('text-gray-400');
+    pulse.classList.remove('hidden');
+    input.placeholder = '🎤 Listening...';
+  };
+
+  voiceRecognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    input.value = transcript;
+
+    if (event.results[event.resultIndex].isFinal) {
+      lastDetectedLang = detectLanguage(transcript);
+      // Auto-send after a brief pause
+      setTimeout(() => {
+        if (input.value.trim()) sendDoubt();
+      }, 400);
+    }
+  };
+
+  voiceRecognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    if (event.error === 'not-allowed') {
+      addMessage('⚠️ Microphone access denied. Please allow microphone permission and try again.', 'error');
+    } else if (event.error !== 'aborted') {
+      addMessage('⚠️ Voice error: ' + event.error, 'error');
+    }
+  };
+
+  voiceRecognition.onend = () => {
+    isListening = false;
+    btn.classList.remove('text-red-400');
+    btn.classList.add('text-gray-400');
+    pulse.classList.add('hidden');
+    input.placeholder = 'Ask your doubt...';
+  };
+
+  voiceRecognition.start();
+}
+
+// ── End Voice ──
+
 function formatPdfText(text) {
   if (!text) return '';
   let cleaned = text.replace(/ {2,}/g, ' '); // remove excessive spaces
@@ -48,7 +195,12 @@ function sendDoubt() {
 
   socket.once('doubt-response', (data) => {
     removeTypingIndicator(typingId);
-    addMessage(data.message, data.type === 'error' ? 'error' : 'ai');
+    const msgType = data.type === 'error' ? 'error' : 'ai';
+    addMessage(data.message, msgType);
+    // Auto-speak AI responses
+    if (msgType === 'ai') {
+      speakText(data.message, lastDetectedLang);
+    }
   });
 }
 
@@ -66,7 +218,25 @@ function addMessage(text, type) {
     try { content = marked.parse(text); } catch(e) {}
   }
 
-  div.innerHTML = `${type === 'user' ? userAvatar : aiAvatar}<div class="${bgClass} p-4 max-w-[85%] rounded-2xl border border-white/5"><div class="text-sm text-gray-300">${content}</div></div>`;
+  // Build the message bubble
+  const bubbleDiv = document.createElement('div');
+  bubbleDiv.className = `${bgClass} p-4 max-w-[85%] rounded-2xl border border-white/5`;
+  bubbleDiv.innerHTML = `<div class="text-sm text-gray-300">${content}</div>`;
+
+  // Add speaker button for AI messages using data attributes (safe from escaping issues)
+  if (type === 'ai') {
+    const speakerBtn = document.createElement('button');
+    speakerBtn.className = 'speak-btn mt-2 flex items-center gap-1 text-xs text-gray-500 hover:text-brand-400 transition-colors';
+    speakerBtn.title = 'Listen again';
+    speakerBtn.dataset.speakText = text;
+    speakerBtn.dataset.speakLang = lastDetectedLang;
+    speakerBtn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg> Listen';
+    speakerBtn.addEventListener('click', () => speakText(speakerBtn.dataset.speakText, speakerBtn.dataset.speakLang));
+    bubbleDiv.appendChild(speakerBtn);
+  }
+
+  div.innerHTML = type === 'user' ? userAvatar : aiAvatar;
+  div.appendChild(bubbleDiv);
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }

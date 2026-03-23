@@ -29,6 +29,10 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           <input type="file" accept="image/*" class="hidden" id="doubt-image-upload" onchange="uploadDoubtImage(this)">
         </label>
+        <button onclick="toggleVoiceInput()" id="voice-btn" class="p-2 rounded-lg text-gray-400 hover:text-brand-400 transition-all relative" title="Voice input">
+          <svg id="mic-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+          <span id="voice-pulse" class="absolute inset-0 rounded-lg bg-red-500/20 animate-ping hidden"></span>
+        </button>
         <div class="flex-1"><textarea id="doubt-input" rows="1" placeholder="Ask your doubt..." class="input-field pr-12 resize-none min-h-[48px] max-h-32" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDoubt()}"></textarea></div>
         <button onclick="sendDoubt()" id="send-doubt-btn" class="btn-primary p-3 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
       </div>
