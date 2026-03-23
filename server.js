@@ -92,7 +92,6 @@ async function boot() {
   app.use('/srs', require('./routes/srs'));
 
   app.get('/', (req, res) => {
-    if (req.session.user) return res.redirect('/dashboard');
     res.redirect('/login');
   });
 
