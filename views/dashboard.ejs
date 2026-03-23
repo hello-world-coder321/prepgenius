@@ -222,7 +222,7 @@
           <label class="block text-sm text-gray-400 mb-1.5">Subject</label>
           <select id="quiz-subject" class="input-field" required>
             <% subjects.forEach(s => { %>
-            <option value="<%= s %>"><%= s %></option>
+            <option value="<%= s %>" class="bg-gray-900 text-white"><%= s %></option>
             <% }); %>
           </select>
         </div>

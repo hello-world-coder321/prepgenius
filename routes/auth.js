@@ -57,8 +57,7 @@ router.post('/login', async (req, res) => {
       selectedExam: user.selectedExam,
     };
 
-    if (!user.selectedExam) return res.redirect('/exam-select');
-    res.redirect('/dashboard');
+    res.redirect('/exam-select');
   } catch (err) {
     console.error('Login Error:', err);
     res.render('login', { error: 'Something went wrong. Try again.', mode: 'login' });
