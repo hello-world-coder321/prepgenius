@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PrepGenius — AI-powered study platform for JEE, NEET & UPSC preparation">
+  <title>PrepGenius</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/css/output.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+</head>
+<body class="min-h-screen">
+  <!-- Top Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="/dashboard" class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <span class="font-display text-xl font-bold bg-gradient-to-r from-brand-400 to-accent-400 bg-clip-text text-transparent">
+            PrepGenius
+          </span>
+        </a>
+
+        <!-- Nav Links -->
+        <% if (user) { %>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="/dashboard" class="nav-link text-sm">Dashboard</a>
+          <a href="/planner" class="nav-link text-sm">Planner</a>
+          <a href="/study" class="nav-link text-sm">Study Suite</a>
+          <a href="/srs/page" class="nav-link text-sm">Revision Engine</a>
+          <div class="flex items-center gap-3 ml-4">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center text-sm font-bold">
+              <%= user.username.charAt(0).toUpperCase() %>
+            </div>
+            <span class="text-sm text-gray-300"><%= user.username %></span>
+            <a href="/logout" class="text-xs text-gray-500 hover:text-red-400 transition-colors ml-2">Logout</a>
+          </div>
+        </div>
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <% } %>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-surface-900/90 backdrop-blur-xl">
+      <div class="px-4 py-3 space-y-2">
+        <a href="/dashboard" class="block py-2 text-sm text-gray-300 hover:text-white">Dashboard</a>
+        <a href="/planner" class="block py-2 text-sm text-gray-300 hover:text-white">Study Planner</a>
+        <a href="/study" class="block py-2 text-sm text-gray-300 hover:text-white">Study Suite</a>
+        <a href="/srs/page" class="block py-2 text-sm text-gray-300 hover:text-white">Revision Engine</a>
+        <a href="/logout" class="block py-2 text-sm text-red-400">Logout</a>
+      </div>
+    </div>
+  </nav>
+  <script>
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+  </script>

@@ -1,0 +1,114 @@
+<%- include('partials/header') %>
+<main class="min-h-screen pt-20 pb-12 px-4" data-exam="<%= exam %>" data-user-id="<%= user.id %>">
+<div class="max-w-7xl mx-auto">
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <a href="/dashboard" class="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 mb-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Back to Dashboard
+    </a>
+    <h1 class="font-display text-2xl font-bold text-white">AI Study Suite</h1>
+  </div>
+  <span class="text-xs text-gray-500 glass-card px-3 py-1.5"><%= exam %> Mode</span>
+</div>
+<div class="grid lg:grid-cols-2 gap-6 h-[calc(100vh-10rem)]">
+  <!-- LEFT: Chat -->
+  <div class="flex flex-col glass-card overflow-hidden">
+    <div class="p-4 border-b border-white/5 flex items-center justify-between">
+      <h2 class="font-display text-sm font-bold text-white flex items-center gap-2"><div class="w-2 h-2 bg-accent-500 rounded-full animate-pulse"></div>AI Doubt Solver</h2>
+      <button onclick="toggleHintMode()" id="hint-toggle" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-amber-400 hover:border-amber-500/30 transition-all">💡 Get Hint</button>
+    </div>
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
+        <div class="glass-card p-4 max-w-[85%]"><p class="text-sm text-gray-300">Hello! I'm your AI study assistant for <strong class="text-brand-400"><%= exam %></strong>. Ask me any doubt!</p></div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-white/5">
+      <div class="flex items-end gap-2">
+        <label class="cursor-pointer text-gray-400 hover:text-brand-400 transition-colors p-2" title="Upload doubt image">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <input type="file" accept="image/*" class="hidden" id="doubt-image-upload" onchange="uploadDoubtImage(this)">
+        </label>
+        <div class="flex-1"><textarea id="doubt-input" rows="1" placeholder="Ask your doubt..." class="input-field pr-12 resize-none min-h-[48px] max-h-32" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDoubt()}"></textarea></div>
+        <button onclick="sendDoubt()" id="send-doubt-btn" class="btn-primary p-3 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <!-- RIGHT: PDF / Summary / YouTube -->
+  <div class="flex flex-col glass-card overflow-hidden">
+    <div class="p-4 border-b border-white/5 flex items-center gap-2 flex-wrap">
+      <button onclick="switchPanel('upload')" id="tab-upload" class="text-xs px-3 py-1.5 rounded-lg bg-brand-600 text-white transition-all">Upload</button>
+      <button onclick="switchPanel('library')" id="tab-library" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 transition-all">📚 Library</button>
+      <button onclick="switchPanel('summary')" id="tab-summary" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 transition-all">Summarize</button>
+      <button onclick="switchPanel('youtube')" id="tab-youtube" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 transition-all">🎬 YouTube</button>
+      <button onclick="switchPanel('viewer')" id="tab-viewer" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 transition-all">Viewer</button>
+    </div>
+    <div id="panel-upload" class="flex-1 p-6 flex items-center justify-center">
+      <div class="text-center"><label class="cursor-pointer group">
+        <div class="w-20 h-20 rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center mx-auto mb-4 group-hover:border-brand-400/40 transition-all"><svg class="w-8 h-8 text-gray-500 group-hover:text-brand-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div>
+        <p class="text-sm text-gray-300 mb-1">Upload PDF or Image</p><p class="text-xs text-gray-500">Drop your study material here</p>
+        <input type="file" accept=".pdf,image/*" class="hidden" id="file-upload" onchange="uploadFile(this)">
+      </label><div id="upload-status" class="mt-4 text-sm"></div></div>
+    </div>
+    <div id="panel-library" class="flex-1 p-6 hidden overflow-y-auto">
+      <div class="space-y-3">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-white">My Books & Documents</h3>
+          <button onclick="loadLibrary()" class="text-xs text-gray-500 hover:text-brand-400 transition-colors">↻ Refresh</button>
+        </div>
+        <div id="library-list">
+          <div class="text-center py-8 text-gray-500">
+            <div class="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            Loading...
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="panel-summary" class="flex-1 p-6 hidden overflow-y-auto">
+      <div class="space-y-4"><p class="text-sm text-gray-400 mb-4">Paste text then choose a summary style:</p>
+      <textarea id="summary-text" rows="6" placeholder="Paste text here or upload a document first..." class="input-field text-sm resize-none"></textarea>
+      <div class="flex gap-2"><button onclick="summarize('executive')" class="btn-primary text-xs flex-1">📋 Executive</button><button onclick="summarize('conceptmap')" class="btn-secondary text-xs flex-1">🗺️ Concept Map</button><button onclick="summarize('qna')" class="btn-secondary text-xs flex-1">❓ Q&A</button></div>
+      <div id="summary-result" class="mt-4 p-4 bg-white/5 rounded-xl text-sm text-gray-300 hidden"></div></div>
+    </div>
+    <!-- YouTube Panel -->
+    <div id="panel-youtube" class="flex-1 p-6 hidden overflow-y-auto">
+      <div class="space-y-4">
+        <p class="text-sm text-gray-400">Paste a YouTube video URL to generate structured study notes:</p>
+        <div class="flex gap-2">
+          <input type="text" id="youtube-url" placeholder="https://youtube.com/watch?v=..." class="input-field text-sm flex-1">
+          <button onclick="processYouTube()" id="youtube-btn" class="btn-primary text-sm px-4 flex-shrink-0">🎬 Process</button>
+        </div>
+        <div id="youtube-preview" class="hidden">
+          <div class="aspect-video rounded-xl overflow-hidden bg-black mb-4">
+            <iframe id="youtube-iframe" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+        <div id="youtube-result" class="hidden p-4 bg-white/5 rounded-xl text-sm text-gray-300"></div>
+      </div>
+    </div>
+    <div id="panel-viewer" class="flex-1 p-6 hidden overflow-y-auto">
+      <div id="viewer-content" class="text-center text-gray-500 py-12"><svg class="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p class="text-sm">Upload a document to view it here</p></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Custom Delete Confirmation Modal -->
+<div id="delete-modal" class="modal-backdrop flex items-center justify-center">
+  <div class="modal-content glass-card p-6 max-w-sm w-full text-center">
+    <div class="w-14 h-14 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+      <svg class="w-7 h-7 text-red-500 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </div>
+    <h2 class="font-display text-lg font-bold text-white mb-2">Delete Document?</h2>
+    <p class="text-sm text-gray-400 mb-6">This cannot be undone. It will be permanently removed from your library.</p>
+    <div class="flex gap-3">
+      <button id="cancel-delete-btn" class="btn-secondary flex-1 py-2 text-sm">Cancel</button>
+      <button id="confirm-delete-btn" class="btn-primary flex-1 py-2 text-sm bg-gradient-to-r from-red-600 to-red-500 hover:shadow-red-500/25 border-none">Delete</button>
+    </div>
+  </div>
+</div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/js/study.js"></script>
+<%- include('partials/footer') %>
