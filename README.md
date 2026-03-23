@@ -32,8 +32,8 @@ AI-driven platforms like PrepGenius aim to personalize learning paths and improv
 ## 🛠️ Tech Stack
 
 - Frontend: HTML, CSS, JavaScript  
-- Backend: Node.js / Express (if used)  
-- Database: MongoDB (if used)  
-- AI Integration: (optional / future)
+- Backend: Node.js / Express  
+- Database: MongoDB 
+- AI Integration
 
 ---
